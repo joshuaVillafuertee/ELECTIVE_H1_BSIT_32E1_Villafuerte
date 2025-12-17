@@ -1,0 +1,565 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Resolutions Todo UI (API Tester)</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: Canvas;
+      --fg: CanvasText;
+      --muted: color-mix(in oklab, var(--fg) 60%, transparent);
+      --border: color-mix(in oklab, var(--fg) 16%, transparent);
+      --card: color-mix(in oklab, var(--bg) 92%, var(--fg) 8%);
+      --shadow: color-mix(in oklab, var(--fg) 12%, transparent);
+      --accent: color-mix(in oklab, #3b82f6 70%, var(--fg) 30%);
+      --danger: color-mix(in oklab, #ef4444 70%, var(--fg) 30%);
+      --ok: color-mix(in oklab, #10b981 70%, var(--fg) 30%);
+      --radius: 16px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+    }
+
+    body { margin: 20px; }
+    h1 { margin: 0 0 8px; font-size: 20px; }
+    .sub { margin: 0 0 16px; color: var(--muted); font-size: 13px; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.6fr 1fr;
+      gap: 16px;
+      align-items: start;
+    }
+    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      box-shadow: 0 10px 30px -25px var(--shadow);
+    }
+
+    .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .stack { display: grid; gap: 8px; }
+    label { font-size: 12px; color: var(--muted); }
+
+    input, button, select {
+      font: inherit;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      background: color-mix(in oklab, var(--bg) 96%, var(--fg) 4%);
+      color: var(--fg);
+      outline: none;
+    }
+    input:focus, select:focus { border-color: color-mix(in oklab, var(--accent) 55%, var(--border)); }
+
+    button { cursor: pointer; }
+    button.primary {
+      background: color-mix(in oklab, var(--accent) 22%, var(--bg));
+      border-color: color-mix(in oklab, var(--accent) 40%, var(--border));
+      font-weight: 600;
+    }
+    button.ghost {
+      background: transparent;
+    }
+    button.danger {
+      background: color-mix(in oklab, var(--danger) 18%, var(--bg));
+      border-color: color-mix(in oklab, var(--danger) 40%, var(--border));
+    }
+    button.small {
+      padding: 8px 10px;
+      border-radius: 10px;
+      font-size: 13px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .tabs { display: inline-flex; gap: 6px; padding: 6px; border: 1px solid var(--border); border-radius: 999px; }
+    .tab {
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--muted);
+    }
+    .tab.active {
+      background: color-mix(in oklab, var(--fg) 6%, transparent);
+      color: var(--fg);
+      border-color: var(--border);
+      font-weight: 600;
+    }
+
+    ul.todo {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      gap: 10px;
+    }
+
+    li.todo-item {
+      display: grid;
+      grid-template-columns: 26px 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 10px 10px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: color-mix(in oklab, var(--bg) 97%, var(--fg) 3%);
+    }
+
+    .title {
+      display: grid;
+      gap: 2px;
+      cursor: pointer;
+    }
+    .title strong { font-size: 14px; font-weight: 650; }
+    .title small { color: var(--muted); font-size: 12px; }
+
+    .done strong { text-decoration: line-through; color: var(--muted); }
+
+    .actions { display: inline-flex; gap: 8px; align-items: center; }
+    .checkbox { width: 18px; height: 18px; }
+
+    .mono { font-family: var(--mono); }
+    pre {
+      margin: 10px 0 0;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: auto;
+      background: color-mix(in oklab, var(--bg) 95%, var(--fg) 5%);
+    }
+
+    .status-ok { color: var(--ok); }
+    .status-bad { color: var(--danger); }
+
+    .hint {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .edit-input {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      font: inherit;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎯 New Year’s Resolutions — Todo UI</h1>
+  <p class="sub">This page calls your API endpoints so you can test verbs + status codes quickly. Change the base URL (port) below.</p>
+
+  <div class="grid">
+    <!-- LEFT: TODO LIST -->
+    <div class="card">
+      <div class="row" style="justify-content: space-between;">
+        <div class="stack" style="min-width: 320px; flex: 1;">
+          <label for="baseUrl">Base API URL (change port here)</label>
+          <input id="baseUrl" value="https://localhost:5001" placeholder="https://localhost:7123" />
+          <div class="hint">
+            Endpoints used: <span class="mono">/api/resolutions</span> and <span class="mono">/api/resolutions/{id}</span><br/>
+            Query params: <span class="mono">?isDone=true|false</span> and <span class="mono">?title=search</span>
+          </div>
+        </div>
+        <div class="row">
+          <button class="primary small" id="btnRefresh">Refresh</button>
+          <span class="pill"><span id="connDot">●</span> <span id="connText">Not checked</span></span>
+        </div>
+      </div>
+
+      <hr style="border:0;border-top:1px solid var(--border); margin: 14px 0;" />
+
+      <!-- ADD -->
+      <div class="row">
+        <div class="stack" style="flex: 1; min-width: 240px;">
+          <label for="newTitle">Add a resolution</label>
+          <input id="newTitle" placeholder="e.g. Walk 20 minutes daily" />
+          <div class="hint">POST <span class="mono">/api/resolutions</span> with JSON body <span class="mono">{"title":"..."}</span></div>
+        </div>
+        <div class="stack">
+          <label>&nbsp;</label>
+          <button class="primary" id="btnAdd">Add</button>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top: 14px; justify-content: space-between;">
+        <!-- FILTER TABS -->
+        <div class="tabs" role="tablist" aria-label="Filter">
+          <button class="tab active" data-filter="all">All</button>
+          <button class="tab" data-filter="active">Active</button>
+          <button class="tab" data-filter="done">Done</button>
+        </div>
+
+        <!-- SEARCH -->
+        <div class="row">
+          <input id="searchTitle" placeholder="Search title..." />
+          <button class="ghost small" id="btnClearSearch">Clear</button>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top: 12px; justify-content: space-between;">
+        <span class="pill">Showing <strong id="countShown" class="mono">0</strong> / <strong id="countTotal" class="mono">0</strong></span>
+        <span class="pill">Tip: double-click a title to edit</span>
+      </div>
+
+      <div style="margin-top: 12px;">
+        <ul class="todo" id="todoList"></ul>
+      </div>
+    </div>
+
+    <!-- RIGHT: DETAILS + LAST RESPONSE -->
+    <div class="card">
+      <div class="row" style="justify-content: space-between;">
+        <strong>Details (GET by ID)</strong>
+        <span class="pill mono" id="detailUrl">—</span>
+      </div>
+      <div class="hint" style="margin-top: 6px;">
+        Clicking an item calls: <span class="mono">GET /api/resolutions/{id}</span> and shows the detail response (or 400/404).
+      </div>
+      <pre class="mono" id="detailBody">{}</pre>
+
+      <hr style="border:0;border-top:1px solid var(--border); margin: 14px 0;" />
+
+      <div class="row" style="justify-content: space-between;">
+        <strong>Last API Call</strong>
+        <span class="pill"><span>Status:</span> <span id="lastStatus" class="mono">—</span> <span id="lastBadge"></span></span>
+      </div>
+
+      <div class="hint" style="margin-top: 6px;">
+        This helps verify that you return the correct HTTP status codes (200/201/204/400/404).
+      </div>
+
+      <div style="margin-top: 10px;" class="pill mono" id="lastCall">—</div>
+
+      <details style="margin-top: 10px;">
+        <summary class="mono">Last request body</summary>
+        <pre class="mono" id="lastReqBody">(none)</pre>
+      </details>
+
+      <details style="margin-top: 10px;" open>
+        <summary class="mono">Last response body</summary>
+        <pre class="mono" id="lastResBody">{}</pre>
+      </details>
+
+      <div class="hint" style="margin-top: 10px;">
+        If you get CORS errors, your API must allow requests from this page’s origin. If opening as a file causes issues, serve this HTML with a simple local web server.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ---------- API helpers ----------
+    function base() {
+      return document.getElementById("baseUrl").value.replace(/\/+$/, "");
+    }
+
+    function setConn(ok, text) {
+      const dot = document.getElementById("connDot");
+      const label = document.getElementById("connText");
+      dot.style.color = ok ? "var(--ok)" : "var(--danger)";
+      label.textContent = text;
+    }
+
+    function setLastCall(method, url, reqBody) {
+      document.getElementById("lastCall").textContent = `${method} ${url}`;
+      document.getElementById("lastReqBody").textContent = reqBody ? JSON.stringify(reqBody, null, 2) : "(none)";
+    }
+
+    function setLastResponse(status, body, statusText="") {
+      const s = document.getElementById("lastStatus");
+      const b = document.getElementById("lastBadge");
+      s.textContent = status === 0 ? "Network error" : `${status} ${statusText}`.trim();
+
+      const ok = status >= 200 && status < 300;
+      b.textContent = ok ? " ✔" : " ✖";
+      b.className = ok ? "status-ok" : "status-bad";
+
+      document.getElementById("lastResBody").textContent =
+        body === "" ? "(empty body)" :
+        typeof body === "string" ? body :
+        JSON.stringify(body, null, 2);
+    }
+
+    async function api(method, path, body) {
+      const url = `${base()}${path}`;
+      setLastCall(method, url, body);
+
+      const options = { method, headers: {} };
+      if (body !== undefined) {
+        options.headers["Content-Type"] = "application/json";
+        options.body = JSON.stringify(body);
+      }
+
+      try {
+        const res = await fetch(url, options);
+        const text = await res.text();
+        let parsed = text;
+
+        if (text) {
+          try { parsed = JSON.parse(text); } catch { /* keep as text */ }
+        } else {
+          parsed = "";
+        }
+
+        setLastResponse(res.status, parsed, res.statusText);
+        return { status: res.status, body: parsed };
+      } catch (err) {
+        setLastResponse(0, String(err));
+        return { status: 0, body: String(err) };
+      }
+    }
+
+    // ---------- UI state ----------
+    let filterMode = "all"; // all | active | done
+    let searchText = "";
+    let lastList = []; // normalized array
+
+    function normalizeListResponse(body) {
+      // Expected: { items: [...] }
+      // But be forgiving if students return a raw array.
+      if (Array.isArray(body)) return body;
+      if (body && Array.isArray(body.items)) return body.items;
+      return [];
+    }
+
+    function buildListQuery() {
+      const params = new URLSearchParams();
+
+      if (filterMode === "active") params.set("isDone", "false");
+      if (filterMode === "done") params.set("isDone", "true");
+
+      if (searchText.trim() !== "") params.set("title", searchText.trim());
+
+      const qs = params.toString();
+      return qs ? `?${qs}` : "";
+    }
+
+    function renderList(items) {
+      const ul = document.getElementById("todoList");
+      ul.innerHTML = "";
+
+      // counts
+      document.getElementById("countShown").textContent = String(items.length);
+      document.getElementById("countTotal").textContent = String(lastList.length);
+
+      if (items.length === 0) {
+        const li = document.createElement("li");
+        li.className = "todo-item";
+        li.innerHTML = `
+          <div></div>
+          <div class="title">
+            <strong>No results</strong>
+            <small>Try a different filter/search, or add a new resolution.</small>
+          </div>
+          <div></div>
+        `;
+        ul.appendChild(li);
+        return;
+      }
+
+      for (const r of items) {
+        const li = document.createElement("li");
+        li.className = "todo-item";
+
+        const doneClass = r.isDone ? "done" : "";
+        const created = r.createdAt ? `Created: ${r.createdAt}` : "Click to load details";
+
+        li.innerHTML = `
+          <input class="checkbox" type="checkbox" ${r.isDone ? "checked" : ""} />
+          <div class="title ${doneClass}" title="Click to load details. Double-click title to edit.">
+            <strong class="titleText"></strong>
+            <small class="metaText"></small>
+          </div>
+          <div class="actions">
+            <button class="ghost small" title="View details">Info</button>
+            <button class="danger small" title="Delete">Delete</button>
+          </div>
+        `;
+
+        const titleStrong = li.querySelector(".titleText");
+        const metaSmall = li.querySelector(".metaText");
+        titleStrong.textContent = r.title ?? "(no title)";
+        metaSmall.textContent = created;
+
+        const checkbox = li.querySelector("input[type=checkbox]");
+        const infoBtn = li.querySelector(".ghost");
+        const delBtn = li.querySelector(".danger");
+        const titleDiv = li.querySelector(".title");
+
+        checkbox.addEventListener("change", async () => {
+          // PUT /api/resolutions/{id} with { id, title, isDone }
+          await updateResolution(r.id, r.title, checkbox.checked);
+          await refreshList();
+        });
+
+        infoBtn.addEventListener("click", async (e) => {
+          e.stopPropagation();
+          await loadDetails(r.id);
+        });
+
+        delBtn.addEventListener("click", async (e) => {
+          e.stopPropagation();
+          await deleteResolution(r.id);
+          await refreshList();
+        });
+
+        titleDiv.addEventListener("click", async () => {
+          await loadDetails(r.id);
+        });
+
+        titleDiv.addEventListener("dblclick", async (e) => {
+          e.stopPropagation();
+          await startInlineEdit(titleDiv, r);
+        });
+
+        ul.appendChild(li);
+      }
+    }
+
+    function applyClientSideCountsAndRender() {
+      // We request filtered list from server, but keep total from lastList.
+      // lastList is currently the same as the server-returned list.
+      renderList(lastList);
+    }
+
+    // ---------- Endpoint actions ----------
+    async function refreshList() {
+      const qs = buildListQuery();
+      const res = await api("GET", `/api/resolutions${qs}`);
+      if (res.status >= 200 && res.status < 300) {
+        lastList = normalizeListResponse(res.body);
+        setConn(true, "Connected");
+      } else {
+        lastList = [];
+        setConn(false, "Check API / CORS / URL");
+      }
+      applyClientSideCountsAndRender();
+    }
+
+    async function loadDetails(id) {
+      const url = `${base()}/api/resolutions/${id}`;
+      document.getElementById("detailUrl").textContent = `/api/resolutions/${id}`;
+
+      const res = await api("GET", `/api/resolutions/${id}`);
+      document.getElementById("detailBody").textContent =
+        res.body === "" ? "(empty body)" :
+        typeof res.body === "string" ? res.body :
+        JSON.stringify(res.body, null, 2);
+    }
+
+    async function createResolution(title) {
+      // POST /api/resolutions with { title }
+      return api("POST", "/api/resolutions", { title });
+    }
+
+    async function updateResolution(id, title, isDone) {
+      // PUT /api/resolutions/{id} with { id, title, isDone }
+      return api("PUT", `/api/resolutions/${id}`, { id, title, isDone });
+    }
+
+    async function deleteResolution(id) {
+      // DELETE /api/resolutions/{id}
+      return api("DELETE", `/api/resolutions/${id}`);
+    }
+
+    // ---------- Inline editing ----------
+    async function startInlineEdit(container, resolution) {
+      const currentTitle = resolution.title ?? "";
+      const strong = container.querySelector("strong");
+      const meta = container.querySelector("small");
+
+      const input = document.createElement("input");
+      input.className = "edit-input";
+      input.value = currentTitle;
+      input.placeholder = "Edit title...";
+      strong.replaceWith(input);
+      meta.textContent = "Press Enter to save, Esc to cancel";
+
+      input.focus();
+      input.select();
+
+      const cancel = () => {
+        input.replaceWith(strong);
+        meta.textContent = resolution.createdAt ? `Created: ${resolution.createdAt}` : "Click to load details";
+      };
+
+      const save = async () => {
+        const newTitle = input.value.trim();
+        // Still call API even if invalid, so students can see 400 BadRequest.
+        await updateResolution(resolution.id, newTitle, !!resolution.isDone);
+        await refreshList();
+      };
+
+      input.addEventListener("keydown", async (e) => {
+        if (e.key === "Escape") cancel();
+        if (e.key === "Enter") await save();
+      });
+
+      input.addEventListener("blur", cancel);
+    }
+
+    // ---------- Event wiring ----------
+    document.getElementById("btnRefresh").addEventListener("click", refreshList);
+
+    document.getElementById("btnAdd").addEventListener("click", async () => {
+      const input = document.getElementById("newTitle");
+      const title = input.value.trim();
+      await createResolution(title); // even if invalid, shows 400
+      input.value = "";
+      await refreshList();
+    });
+
+    document.getElementById("newTitle").addEventListener("keydown", async (e) => {
+      if (e.key === "Enter") {
+        document.getElementById("btnAdd").click();
+      }
+    });
+
+    document.getElementById("searchTitle").addEventListener("input", async (e) => {
+      searchText = e.target.value;
+      // light debounce
+      clearTimeout(window.__searchTimer);
+      window.__searchTimer = setTimeout(refreshList, 250);
+    });
+
+    document.getElementById("btnClearSearch").addEventListener("click", async () => {
+      document.getElementById("searchTitle").value = "";
+      searchText = "";
+      await refreshList();
+    });
+
+    document.querySelectorAll(".tab").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        document.querySelectorAll(".tab").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        filterMode = btn.dataset.filter;
+        await refreshList();
+      });
+    });
+
+    // initial load
+    (async function init() {
+      setConn(false, "Not checked");
+      await refreshList();
+    })();
+  </script>
+</body>
+</html>

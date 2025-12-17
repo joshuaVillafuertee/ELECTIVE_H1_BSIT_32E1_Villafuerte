@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36310.24 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ELECTIVE_H1_BSIT_32E1_Villafuerte", "ELECTIVE_H1_BSIT_32E1_Villafuerte\ELECTIVE_H1_BSIT_32E1_Villafuerte.csproj", "{54DDC257-59C1-4D3D-8292-955CBDDABDED}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{54DDC257-59C1-4D3D-8292-955CBDDABDED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{54DDC257-59C1-4D3D-8292-955CBDDABDED}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{54DDC257-59C1-4D3D-8292-955CBDDABDED}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{54DDC257-59C1-4D3D-8292-955CBDDABDED}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F1E83D46-7C60-4916-8304-1BE185D2F3D6}
+	EndGlobalSection
+EndGlobal

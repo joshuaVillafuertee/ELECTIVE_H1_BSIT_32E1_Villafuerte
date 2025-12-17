@@ -1,0 +1,6 @@
+@ELECTIVE_H1_BSIT_32E1_Villafuerte_HostAddress = http://localhost:5062
+
+GET {{ELECTIVE_H1_BSIT_32E1_Villafuerte_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
